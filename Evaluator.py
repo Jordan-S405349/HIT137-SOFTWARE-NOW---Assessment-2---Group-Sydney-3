@@ -222,3 +222,4 @@ def format_number_literal(raw):
             return str(int(value))
     
     return raw
+print()
