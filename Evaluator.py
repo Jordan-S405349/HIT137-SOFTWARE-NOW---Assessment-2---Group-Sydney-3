@@ -129,8 +129,8 @@ def parse_term(token, pos):
     while True:
         term = peeking(token, pos)
         
-        if term[0] == "OP" and term[1] in ("*", "/", "5"):
-            operator = advancing(token, pos)
+        if term[0] == "OP" and term[1] in ("*", "/", "%"):
+            operator = advancing(token, pos)[1]
             right = parse_unary(token, pos)
             node = ("Binop", operator, node, right)
         
@@ -222,4 +222,3 @@ def format_number_literal(raw):
             return str(int(value))
     
     return raw
-print()
