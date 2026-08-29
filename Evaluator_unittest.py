@@ -30,34 +30,6 @@ example = [
 good = sum(check_tokenisation(expression, expected_token_result) for expression, expected_token_result in example)
 print(f"\n{good}/{len(example)} is correct.") # The result: 7/7 all is correct.
 
-"""checking the tokenisation to ensure they work properly
-"""
-def check_tokenisation(expression, expected_token_result):
-    try:
-        result =  token_into_string(tokenisation(expression))
-    except ValueError:
-        result = "Something is wrong!"
-    
-    status = "Good to go!" if result == expected_token_result else "Check again!"
-    print(f"[{status}] tokenisation({expression!r})")
-    
-    if status == "Check again!":
-        print(f"{"Expected":35}: {expected_token_result}")
-        print(f"{"What it gives":35}: {result}")
-    return status == "Good to go!"
-
-example = [
-    ("3 + 5", "[NUM:3] [OP:+] [NUM:5] [END]"),
-    ("2 + 3*4", "[NUM:2] [OP:+] [NUM:3] [OP:*] [NUM:4] [END]"),
-    ("-(3 + 4)", "[OP:-] [LPAREN:(] [NUM:3] [OP:+] [NUM:4] [RPAREN:)] [END]"),
-    ("--5", "[OP:-] [OP:-] [NUM:5] [END]"),
-    ("3*(10 - 2)", "[NUM:3] [OP:*] [LPAREN:(] [NUM:10] [OP:-] [NUM:2] [RPAREN:)] [END]"),
-    ("3 @ 5", "Something is wrong!"),
-    ("1 / 0", "[NUM:1] [OP:/] [NUM:0] [END]")
-]
-
-good = sum(check_tokenisation(expression, expected_token_result) for expression, expected_token_result in example)
-print(f"\n{good}/{len(example)} is correct.") # The result: 7/7
 
 class TestTokenisation(unittest.TestCase):
     def test_addition(self):
@@ -166,21 +138,21 @@ class ParseExpressionTest(unittest.TestCase):
         tree = recursive_parse(tokenisation("(-(6^6)"))
         self.assertEqual(
             tree_into_string(tree),
-            "(negative (^ 6 6))"
+            "(neg (^ 6 6))"
         )
     
     def double_minus_tree_testing(self):
         tree = recursive_parse(tokenisation("--6"))
         self.assertEqual(
             tree_into_string(tree),
-            "(negative (negative 6))"
+            "(neg (neg 6))"
         )
     
     def binary_minus_after_operator_testing(self):
         tree = recursive_parse(tokenisation("6 * -7"))
         self.assertEqual(
             tree_into_string(tree),
-            "(* 6 (negative 7))"
+            "(* 6 (neg 7))"
         )
         
     def multiplication_number_then_parenthesis_testing(self):
@@ -208,6 +180,56 @@ class ParseExpressionTest(unittest.TestCase):
     def parenthesis_error_testing(self):
         with self.assertRaises(ValueError):
             recursive_parse(tokenisation("(6 + 7"))
+    
+class TestingWithSample(unittest.TestCase):
+    
+    def test_all_sample_cases_match(self):
+        
+        with open("sample_input.txt", "r", newline="") as file:
+            lines = [
+                line.rstrip("\r\n")
+                for line in file.read().split("\n")
+                if line.strip() != ""
+            ]
+        
+        with open("sample_output.txt", "r", newline="") as file:
+            blocks = file.read().replace("\r\n", "\n").strip("\n").split("\n\n")
             
+        for line, block in zip(lines, blocks):
+            expected = dict(entry.split(": ", 1) for entry in block.split("\n"))
+            
+            with self.subTest(expression=line):
+                try:
+                    token = tokenisation(line)
+                    token_to_str = token_into_string(token)
+                except ValueError:
+                    token_to_str = "ERROR"
+                self.assertEqual(token_to_str, expected["Tokens"])
+                
+                try:
+                    tree = recursive_parse(token) if token_to_str != "ERROR" else None
+                    tree_to_str = tree_into_string(tree) if tree is not None else "ERROR"
+                except ValueError:
+                    tree_to_str = "ERROR"
+                self.assertEqual(tree_to_str, expected["Tree"])
+                
 if __name__ == "__main__":
     unittest.main()
+
+"""Result:
+[Good to go!] tokenisation('3 + 5')
+[Good to go!] tokenisation('2 + 3*4')
+[Good to go!] tokenisation('-(3 + 4)')
+[Good to go!] tokenisation('--5')
+[Good to go!] tokenisation('3*(10 - 2)')
+[Good to go!] tokenisation('3 @ 5')
+[Good to go!] tokenisation('1 / 0')
+
+7/7 is correct.
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 0.001s
+
+OK
+
+"""
