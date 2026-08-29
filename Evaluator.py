@@ -100,7 +100,7 @@ def token_into_string(token):
 
 def recursive_parse(token):
     """parse all the token stream into a tree
-    and raises the ValueErro on failure
+    and raises the ValueErrr on failure
     """
     
     pos = [0]
@@ -200,7 +200,7 @@ def power_parse(token, pos):
 
 def primary_parse(token, pos):
     """This is the innermost level.
-    A single number and parenthesied sub expression.
+    A single number and parenthesised sub expression.
     When it see the '(', it will call the parse_expression again.
     It will handling the parenthesised sub-expression,
     because the parentheses can appear inside the parentheses."""
@@ -215,7 +215,7 @@ def primary_parse(token, pos):
         node = parse_expression(token, pos)     # recurse back to the top level
         expecting(token, pos, "RPAREN")         # ensure it followed by ")"
         
-        # It will implicit the multiplicatiojn after the closing parenthesis
+        # It will implicit the multiplication after the closing parenthesis
         # Ex: "(6)7" or "(6)(7)" will be "(6)*7" or "(6)*(7)"
         if peeking(token, pos)[0] in ("NUM", "LPAREJ"):
             right = parse_unary(token, pos)
