@@ -100,7 +100,7 @@ def token_into_string(token):
 
 def recursive_parse(token):
     """parse all the token stream into a tree
-    and raises the ValueErrr on failure
+    and raises the ValueError on failure
     """
     
     pos = [0]
