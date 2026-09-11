@@ -382,3 +382,6 @@ def evaluate_file(input_path, output_path="output.txt"):
         file.write("\n\n".join(blocks) + "\n")
     
     return results
+
+if __name__ == "__main__":
+    evaluate_file("sample_input.txt", "output.txt")
