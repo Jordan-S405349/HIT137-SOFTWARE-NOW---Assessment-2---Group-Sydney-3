@@ -36,4 +36,4 @@ Built the tokenizer and recursive descent parser for question 2 (evaluator.py), 
 evaluator.py: contains the tokenisation, token_into_string, recursive_parse, and tree_into_string functions, along with the supporting parser functions for each precedence level (parse_expression, parse_term, parse_unary, power_parse, primary_parse).
 
 ## Divya Malla task: 
-not added yet, please update this section with your contribution.
+Built the evaluation and output logic for Question 2 (evaluator.py), turning the parse tree built by Jordan's parser into an actual computed number, and writing the final results to output.txt.
