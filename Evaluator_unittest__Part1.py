@@ -1,35 +1,6 @@
 import unittest
 from Evaluator import tokenisation, token_into_string, recursive_parse, tree_into_string
 
-"""checking the tokenisation to ensure they work properly
-"""
-def check_tokenisation(expression, expected_token_result):
-    try:
-        result =  token_into_string(tokenisation(expression))
-    except ValueError:
-        result = "Something is wrong!"
-    
-    status = "Good to go!" if result == expected_token_result else "Check again!"
-    print(f"[{status}] tokenisation({expression!r})")
-    
-    if status == "Check again!":
-        print(f"{"Expected":35}: {expected_token_result}")
-        print(f"{"What it gives":35}: {result}")
-    return status == "Good to go!"
-
-example = [
-    ("3 + 5", "[NUM:3] [OP:+] [NUM:5] [END]"),
-    ("2 + 3*4", "[NUM:2] [OP:+] [NUM:3] [OP:*] [NUM:4] [END]"),
-    ("-(3 + 4)", "[OP:-] [LPAREN:(] [NUM:3] [OP:+] [NUM:4] [RPAREN:)] [END]"),
-    ("--5", "[OP:-] [OP:-] [NUM:5] [END]"),
-    ("3*(10 - 2)", "[NUM:3] [OP:*] [LPAREN:(] [NUM:10] [OP:-] [NUM:2] [RPAREN:)] [END]"),
-    ("3 @ 5", "Something is wrong!"),
-    ("1 / 0", "[NUM:1] [OP:/] [NUM:0] [END]")
-]
-
-good = sum(check_tokenisation(expression, expected_token_result) for expression, expected_token_result in example)
-print(f"\n{good}/{len(example)} is correct.") # The result: 7/7 all is correct.
-
 
 class TestTokenisation(unittest.TestCase):
     def test_addition(self):
@@ -60,14 +31,14 @@ class TestTokenisation(unittest.TestCase):
             "[OP:-] [NUM:5] [END]"
         )
 
-    def double_minus(self):
+    def test_double_minus(self):
         token = tokenisation("--5")
         self.assertEqual(
             token_into_string(token),
             "[OP:-] [OP:-] [NUM:5] [END]"
         )
 
-    def decimal_number(self):
+    def test_decimal_number(self):
         token = tokenisation("3.14 + 2.71")
         self.assertEqual(
             token_into_string(token),
@@ -113,71 +84,71 @@ class ParseExpressionTest(unittest.TestCase):
             "(+ 3 (* 3 4))"
         )
     
-    def parantheses_override_precendence_testing(self):
+    def test_parantheses_override_precendence_testing(self):
         tree = recursive_parse(tokenisation("(2 + 3) * 5"))
         self.assertEqual(
             tree_into_string(tree),
             "(* (+ 2 3) 5)"
             )
     
-    def left_associativity_subtraction_testing(self):
+    def test_left_associativity_subtraction_testing(self):
         tree = recursive_parse(tokenisation("6 - 7 - 1"))
         self.assertEqual(
             tree_into_string(tree),
             ("(- (- 6 7) 1)")
         )
     
-    def right_associativity_power_testing(self):
+    def test_right_associativity_power_testing(self):
         tree = recursive_parse(tokenisation("6^7^9"))
         self.assertEqual(
             tree_into_string(tree),
             "(^ 6 (^ 7 9))"
         )
     
-    def power_bind_tighter_than_minus_testing(self):
-        tree = recursive_parse(tokenisation("(-(6^6)"))
+    def test_power_bind_tighter_than_minus_testing(self):
+        tree = recursive_parse(tokenisation("-(6^6)"))
         self.assertEqual(
             tree_into_string(tree),
             "(neg (^ 6 6))"
         )
     
-    def double_minus_tree_testing(self):
+    def test_double_minus_tree_testing(self):
         tree = recursive_parse(tokenisation("--6"))
         self.assertEqual(
             tree_into_string(tree),
             "(neg (neg 6))"
         )
     
-    def binary_minus_after_operator_testing(self):
+    def test_binary_minus_after_operator_testing(self):
         tree = recursive_parse(tokenisation("6 * -7"))
         self.assertEqual(
             tree_into_string(tree),
             "(* 6 (neg 7))"
         )
         
-    def multiplication_number_then_parenthesis_testing(self):
+    def test_multiplication_number_then_parenthesis_testing(self):
         tree = recursive_parse(tokenisation("6(7+9)"))    
         self.assertEqual(
             tree_into_string(tree),
             "(* 6 (+ 7 9))"
         )
     
-    def multiplication_with_parenthesis_testing(self):
+    def test_multiplication_with_parenthesis_testing(self):
         tree = recursive_parse(tokenisation("(6)(7)"))
         self.assertEqual(
             tree_into_string(tree),
             "(* 6 7)"
         )
     
-    def bare_numbers_without_operator_testing(self):
+    def test_bare_numbers_without_operator_testing(self):
         with self.assertRaises(ValueError):
             recursive_parse(tokenisation("6 7"))
     
-    def missing_number_testing(self):
+    def test_missing_number_testing(self):
         with self.assertRaises(ValueError):
             recursive_parse(tokenisation("+7"))
     
-    def parenthesis_error_testing(self):
+    def test_parenthesis_error_testing(self):
         with self.assertRaises(ValueError):
             recursive_parse(tokenisation("(6 + 7"))
     
@@ -215,21 +186,3 @@ class TestingWithSample(unittest.TestCase):
                 
 if __name__ == "__main__":
     unittest.main()
-
-"""Result:
-[Good to go!] tokenisation('3 + 5')
-[Good to go!] tokenisation('2 + 3*4')
-[Good to go!] tokenisation('-(3 + 4)')
-[Good to go!] tokenisation('--5')
-[Good to go!] tokenisation('3*(10 - 2)')
-[Good to go!] tokenisation('3 @ 5')
-[Good to go!] tokenisation('1 / 0')
-
-7/7 is correct.
-...........
-----------------------------------------------------------------------
-Ran 11 tests in 0.001s
-
-OK
-
-"""
