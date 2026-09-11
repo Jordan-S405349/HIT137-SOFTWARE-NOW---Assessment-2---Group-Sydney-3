@@ -217,7 +217,7 @@ def primary_parse(token, pos):
         
         # It will implicit the multiplication after the closing parenthesis
         # Ex: "(6)7" or "(6)(7)" will be "(6)*7" or "(6)*(7)"
-        if peeking(token, pos)[0] in ("NUM", "LPAREJ"):
+        if peeking(token, pos)[0] in ("NUM", "LPAREN"):
             right = parse_unary(token, pos)
             return ("Binop", "*", node, right)
         return node
@@ -258,3 +258,127 @@ def format_number_literal(raw):
             return str(int(value))
     
     return raw
+
+
+"""   Evaluation   """
+
+def evaluate_tree(tree):
+    """This def function is walking the parse tree and computing its numeric
+    value. It raises ZeroDivisionError on division/modulo by zero, so the
+    caller can turn that into an "ERROR" result without crashing the program.
+    """
+    node_type = tree[0]
+    
+    if node_type == "num":
+        return float(tree[1])
+    
+    if node_type == "neg":
+        return -evaluate_tree(tree[1])
+    
+    if node_type == "Binop":
+        operator, left, right = tree[1], tree[2], tree[3]
+        left_value = evaluate_tree(left)
+        right_value = evaluate_tree(right)
+        
+        if operator == "+":
+            return left_value + right_value
+        
+        if operator == "-":
+            return left_value - right_value
+        
+        if operator == "*":
+            return left_value * right_value
+        
+        if operator == "/":
+            if right_value == 0:
+                raise ZeroDivisionError("Division by zero")
+            return left_value / right_value
+        
+        if operator == "%":
+            if right_value == 0:
+                raise ZeroDivisionError("Modulo by zero")
+            return left_value % right_value
+        
+        if operator == "^":
+            return left_value ** right_value
+        
+        # Raise if somehow an unrecognised operator reaches here
+        raise ValueError("Unrecognised operator: " + str(operator))
+    
+    # Raise if the tree node shape is not one we know how to evaluate
+    raise ValueError("Unrecognised tree node: " + str(tree))
+
+
+def format_result(value):
+    """Formatting the numeric result of evaluate_tree.
+    Whole numbers print without a decimal point ('8' not '8.0').
+    Everything else is rounded to 4 decimal places.
+    """
+    rounded = round(value, 4)
+    
+    if rounded == int(rounded):
+        return str(int(rounded))
+    
+    return str(rounded)
+
+
+"""   File I/O   """
+
+def evaluate_file(input_path, output_path="output.txt"):
+    """This def function is reading expressions (one per non-blank line)
+    from input_path, tokenising/parsing/evaluating each one, writing the
+    formatted results to output_path, and returning the same results as a
+    list of dicts.
+    
+    Each dict has the keys "Input", "Tokens", "Tree", "Result".
+    A bad line (tokeniser/parser/evaluation error) never crashes the whole
+    run: only that line's affected field(s) become the string "ERROR".
+    """
+    
+    with open(input_path, "r", newline="") as file:
+        lines = [
+            line.strip()
+            for line in file.read().split("\n")
+            if line.strip() != ""
+        ]
+    
+    results = []
+    blocks = []
+    
+    for line in lines:
+        entry = {"Input": line, "Tokens": "ERROR", "Tree": "ERROR", "Result": "ERROR"}
+        
+        # Wrap the whole per-line evaluation so one bad line never
+        # crashes the rest of the file.
+        try:
+            token = tokenisation(line)
+            entry["Tokens"] = token_into_string(token)
+            
+            tree = recursive_parse(token)
+            entry["Tree"] = tree_into_string(tree)
+            
+            try:
+                value = evaluate_tree(tree)
+                entry["Result"] = format_result(value)
+            except (ZeroDivisionError, ValueError):
+                # Tokens and Tree stay valid; only Result becomes ERROR
+                # (e.g. "1 / 0" tokenises and parses fine but can't evaluate)
+                entry["Result"] = "ERROR"
+        
+        except ValueError:
+            # Tokenisation or parsing failed: whichever of Tokens/Tree
+            # was not reached simply keeps its default "ERROR" value.
+            pass
+        
+        results.append(entry)
+        blocks.append(
+            "Input: " + entry["Input"] + "\n"
+            "Tree: " + entry["Tree"] + "\n"
+            "Tokens: " + entry["Tokens"] + "\n"
+            "Result: " + entry["Result"]
+        )
+    
+    with open(output_path, "w", newline="\n") as file:
+        file.write("\n\n".join(blocks) + "\n")
+    
+    return results
