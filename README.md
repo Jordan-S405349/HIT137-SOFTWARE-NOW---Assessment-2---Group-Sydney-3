@@ -23,10 +23,10 @@ Question 2: Expression Evaluator (evaluator.py) A program that reads mathematica
 Each member contributed to a part of the task. Each member should add their own section below describing the files and functions they built when performing their section. This keeps the support program right for everyone.
 
 ## Areeba Salah Ud Din task: 
-not added yet, please update this section with your contribution.
+Reads raw_text.txt and shifts each letter/digit by an amount that depends on its case and which half of the alphabet (or digit range) it falls in, writing the result to encrypted_text.txt.
 
 ## Shraboni Sutradhar task: 
-not added yet, please update this section with your contribution.
+Reads encrypted_text.txt and reverses each of those same shifts to reconstruct the text, writing the result to decrypted_text.txt.
 
 ## Jordan Then Ryan task:
 
